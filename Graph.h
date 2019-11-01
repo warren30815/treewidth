@@ -23,6 +23,12 @@ public:
       num_edges++;
     }
   };
+
+  void clear(){
+    node_set.clear();
+    adj_list.clear();
+    num_edges = 0;
+  }
   
   void add_node(unsigned long node){
     node_set.insert(node);
@@ -38,27 +44,27 @@ public:
   }
 
   bool neighbour_improved(int k,unsigned long n1, unsigned long n2){
-		bool retval = false;		
-		std::unordered_set<unsigned long> neigh1 = get_neighbours(n1);
-		std::unordered_set<unsigned long> neigh2 = get_neighbours(n2);
-			
-		unsigned long count = 0;
-		if 	(neigh1.size()>k-1 && neigh2.size()>k-1){
-			for (auto nn1:neigh1){
-				for (auto nn2:neigh2){
-					if (nn1==nn2){
-						count = count+1;		
-						break;
-					}
-			
-				}
-			}		
-		}
-		if (count > k-1){
-			retval = true;
-		}
+    bool retval = false;    
+    std::unordered_set<unsigned long> neigh1 = get_neighbours(n1);
+    std::unordered_set<unsigned long> neigh2 = get_neighbours(n2);
+      
+    unsigned long count = 0;
+    if  (neigh1.size()>k-1 && neigh2.size()>k-1){
+      for (auto nn1:neigh1){
+        for (auto nn2:neigh2){
+          if (nn1==nn2){
+            count = count+1;    
+            break;
+          }
+      
+        }
+      }   
+    }
+    if (count > k-1){
+      retval = true;
+    }
 
-		return retval;
+    return retval;
 }
  
   void fill(const std::unordered_set<unsigned long>& nodes,\

@@ -8,7 +8,7 @@ import os
 FileName = "Enron.txt"
 Graphtype = netx.Graph()   # use net.DiGraph() for directed graph
 SampleNum = 100
-Hop = 1
+Hop = 3
 OutputFileDir = str(SampleNum) + "_Sample_Data" 
 OutputFileName = str(Hop) + "Hop.txt"
 OutputFilePath = OutputFileDir + "/" + OutputFileName
@@ -46,9 +46,9 @@ def Draw_Graph(G, highlight_nodes):
 
 def Output_Graph_textFile(G, outputPath, selected_node, node_degree):
     with open(outputPath, 'ab') as file:
+        netx.write_edgelist(G, file, data=False, delimiter='\t')
         separtion_log = "----- Node: " + str(selected_node) + " Degree: " + str(node_degree) + "\n"
         file.write(separtion_log.encode())
-        netx.write_edgelist(G, file, data=False, delimiter='\t')
 
 if __name__ == '__main__':
 
