@@ -35,9 +35,11 @@ int SampleNum = 100;
 // endregion
 
 // region 變數區
+string isDirected;  // set by argv (f or t)
 unsigned long total_upper_bound = 0;
 unsigned long total_lower_bound = 0;
 double total_time = 0;
+double total_density = 0;
 // endregion
 
 // 字串切割函數
@@ -80,6 +82,24 @@ vector<string> string_split(const string &s, const string &seperator){
     return result;
 }
 
+double compute_undirected_density(unsigned long node_num, unsigned long edge_num){
+    return (2 * edge_num) / (node_num * (node_num - 1));
+}
+
+double compute_directed_density(unsigned long node_num, unsigned long edge_num){
+    return edge_num / (node_num * (node_num - 1));
+}
+
+void add_total_density(unsigned long node_num, unsigned long edge_num){
+    cout << "add total density" << endl;
+    if (isDirected == "f") total_density += compute_undirected_density(node_num, edge_num);
+    else if (isDirected == "t") total_density += compute_directed_density(node_num, edge_num);
+    else{
+        cout << "f or t" << endl;
+        exit(-1);
+    }
+}
+
 unsigned long lower(Graph graph, int graph_index){
     // string file_name_graph(argv[2]);
     // stringstream ss, ss_stat;
@@ -112,6 +132,7 @@ unsigned long lower(Graph graph, int graph_index){
 
     cout << "loading graph " << graph_index << "..." << flush;
     cout << "graph: " << to_string(graph.number_nodes()) << " / " << to_string(SampleNum) << ", nodes " << endl << to_string(graph.number_edges()) << " edges" << endl;
+    add_total_density(graph.number_nodes(), graph.number_edges());
     // ofstream filestat(ss.str());
     cout << "lower bound..."  << flush;
     t0 = get_timestamp();
@@ -150,6 +171,7 @@ unsigned long upper(Graph graph, int graph_index, int strategy_index, int partia
     // ofstream filestat(ss_stat.str());
     cout << "loading graph " << graph_index << "..." << flush;
     cout << "graph: " << to_string(graph.number_nodes()) << " / " << to_string(SampleNum) << ", nodes " << endl << to_string(graph.number_edges()) << " edges" << endl;
+    add_total_density(graph.number_nodes(), graph.number_edges());
     TreeDecomposition decomposition(graph, *strategies[strategy_index]);
     cout << "upper bound..."  << flush;
     t0 = get_timestamp();
@@ -182,11 +204,12 @@ unsigned long upper(Graph graph, int graph_index, int strategy_index, int partia
 
 int main(int argc, const char * argv[]) {
     string filename = argv[2];
+    isDirected = argv[3];  // f for undirected；t for directed
     ifstream file(filename);  // ifstream: Stream class to read from files
     vector<Graph> graphs;
     timestamp_t start_time, end_time;
+    
     omp_set_num_threads(1000);
-
     start_time = get_timestamp();
 
     cout << "Preprocessing..." << endl;
@@ -212,13 +235,14 @@ int main(int argc, const char * argv[]) {
 
     string first_arg(argv[1]);
     if(first_arg=="--upper"){
-    	int strategy_index = atoi(argv[3]);
-    	int partial_degree = atoi(argv[4]);
+    	int strategy_index = atoi(argv[4]);
+    	int partial_degree = atoi(argv[5]);
 #pragma omp parallel for 
         for(int i = 0; i < SampleNum; i++){
             total_upper_bound += upper(graphs[i], i, strategy_index, partial_degree);
         }
         cout << "Average treewidth 'upper' bound: " << total_upper_bound / SampleNum << endl;
+        cout << "Average density: " << total_density / SampleNum << endl;
     } 
     else if(first_arg=="--lower"){
 #pragma omp parallel for 
@@ -226,6 +250,7 @@ int main(int argc, const char * argv[]) {
             total_lower_bound += lower(graphs[i], i);
         }
         cout << "Average treewidth 'lower' bound: " << total_lower_bound / SampleNum << endl;
+        cout << "Average density: " << total_density / SampleNum << endl;
     } 
     end_time = get_timestamp();
     cout << "Total elapsed time: " << (end_time - start_time)/(1000.0L*1000.0L) << " sec."<< endl;
