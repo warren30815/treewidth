@@ -36,8 +36,10 @@ int SampleNum = 100;
 // region 變數區
 unsigned long total_upper_bound = 0;
 unsigned long total_lower_bound = 0;
+double total_time = 0;
 // endregion
 
+// 字串切割函數
 vector<string> string_split(const string &s, const string &seperator){
     vector<string> result;
     typedef string::size_type string_size;
@@ -77,20 +79,19 @@ vector<string> string_split(const string &s, const string &seperator){
     return result;
 }
 
-unsigned long lower(int argc, const char * argv[]){
-    string file_name_graph(argv[2]);
-    stringstream ss, ss_stat;
+unsigned long lower(Graph graph, int graph_index){
+    // string file_name_graph(argv[2]);
+    // stringstream ss, ss_stat;
     timestamp_t t0, t1;
     double time_sec;
     int meta = 0;
-    int lb = 0;
-    if(argc>3)
-        lb = atoi(argv[3]);
-    if(argc>4)
-        meta = atoi(argv[4]);
+    int lb = 1;
+    // if(argc>3)
+    //     lb = atoi(argv[3]);
+    // if(argc>4)
+    //     meta = atoi(argv[4]);
 
-    ss << file_name_graph << "." << meta << "." << lb << "." << ".lb";
-    Graph graph;
+    // ss << file_name_graph << "." << meta << "." << lb << "." << ".lb";
     //strategy
     unique_ptr<PermutationStrategy> strategy(new DegreePermutationStrategy());
     //lower bounds estimators
@@ -108,20 +109,9 @@ unsigned long lower(int argc, const char * argv[]){
     metas.push_back(unique_ptr<MetaLowerBoundHeuristic>\
           (new LBNPlus(graph, *bounds[lb])));
 
-    unsigned long src, tgt;
-    cout << "loading graph..." << flush;
-    t0 = get_timestamp();
-    ifstream file(file_name_graph);
-    while(file >> src >> tgt){
-        if(src!=tgt) graph.add_edge(src, tgt);
-    }
-    file.close();
-    ofstream filestat(ss.str());
-    t1 = get_timestamp();
-    time_sec = (t1-t0)/(1000.0L*1000.0L);
-    cout << " done in " << time_sec << " sec."<< endl;
-    cout << "graph: " << graph.number_nodes() << " nodes " <<\
-    graph.number_edges() << " edges" << endl;
+    cout << "loading graph " << graph_index << "..." << flush;
+    cout << "graph: " << to_string(graph.number_nodes()) << " / " << to_string(SampleNum) << ", nodes " << endl << to_string(graph.number_edges()) << " edges" << endl;
+    // ofstream filestat(ss.str());
     cout << "lower bound..."  << flush;
     t0 = get_timestamp();
     unsigned long lower = 0;
@@ -155,10 +145,10 @@ unsigned long upper(Graph graph, int graph_index, int strategy_index, int partia
              (new DegreeFillInPermutationStrategy()));
     strategies.push_back(unique_ptr<PermutationStrategy>
              (new MCSPermutationStrategy()));
-    unsigned long src, tgt;
+    // unsigned long src, tgt;
     // ofstream filestat(ss_stat.str());
     cout << "loading graph " << graph_index << "..." << flush;
-    cout << "graph: " << to_string(graph.number_nodes()) << " nodes " << endl << to_string(graph.number_edges()) << " edges" << endl;
+    cout << "graph: " << to_string(graph.number_nodes()) << " / " << to_string(SampleNum) << ", nodes " << endl << to_string(graph.number_edges()) << " edges" << endl;
     TreeDecomposition decomposition(graph, *strategies[strategy_index]);
     cout << "upper bound..."  << flush;
     t0 = get_timestamp();
@@ -195,6 +185,8 @@ int main(int argc, const char * argv[]) {
     int partial_degree = atoi(argv[4]);
     ifstream file(filename);  // ifstream: Stream class to read from files
     vector<Graph> graphs;
+    timestamp_t start_time, end_time;
+    start_time = get_timestamp();
 
     cout << "Preprocessing..." << endl;
     if (file.is_open()) {
@@ -221,15 +213,16 @@ int main(int argc, const char * argv[]) {
     if(first_arg=="--upper"){
         for(int i = 0; i < SampleNum; i++){
             total_upper_bound += upper(graphs[i], i, strategy_index, partial_degree);
-            cout << "fuck you" << endl;
         }
         cout << "Average treewidth 'upper' bound: " << total_upper_bound / SampleNum << endl;
     } 
     else if(first_arg=="--lower"){
         for(int i = 0; i < SampleNum; i++){
-            total_lower_bound += lower(argc, argv);
+            total_lower_bound += lower(graphs[i], i);
         }
         cout << "Average treewidth 'lower' bound: " << total_lower_bound / SampleNum << endl;
     } 
+    end_time = get_timestamp();
+    cout << " Total elapsed time: " << (end_time - start_time)/(1000.0L*1000.0L) << " sec."<< endl;
     return 0;
 }
