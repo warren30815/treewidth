@@ -2,17 +2,18 @@ from operator import itemgetter
 import matplotlib.pyplot as plt
 import networkx as netx
 from random import *
-import os
+import os, sys
 
 # region 變數區
-FileName = "Enron.txt"
-Graphtype = netx.Graph()   # use net.DiGraph() for directed graph
+FileName = "gplus_combined"
+Graphtype = netx.DiGraph()   # use net.DiGraph() for directed graph
 SampleNum = 100
 Hop = 3
-OutputFileDir = str(SampleNum) + "_Sample_Data" 
+OutputFileDir = FileName + "_" + str(SampleNum) + "_Sample_Data" 
 OutputFileName = str(Hop) + "Hop.txt"
 OutputFilePath = OutputFileDir + "/" + OutputFileName
 Mode = "Dev"  # Dev or Test 
+IsDirected = sys.argv[1]
 # endregion
 
 def Test_ego_graph_function(hop=1):
@@ -30,7 +31,7 @@ def Test_ego_graph_function(hop=1):
     exit()
 
 def Build_Custom_hop_Ego_Network(G, hop, selected_node):
-    custom_ego = netx.ego_graph(G, selected_node, hop)
+    custom_ego = netx.ego_graph(G, selected_node, hop, undirected=IsDirected)
     return custom_ego
    
 def Calculate_largest_degree_node(G):
@@ -54,7 +55,7 @@ if __name__ == '__main__':
 
     if Mode == "Dev":
         # How to read from a file. Note: if your egde weights are int, change float to int.
-        G = netx.read_edgelist(FileName, create_using=Graphtype, nodetype=int)
+        G = netx.read_edgelist(FileName + ".txt", create_using=Graphtype, nodetype=int)
 
         if not os.path.isdir(OutputFileDir):
             os.mkdir(OutputFileDir)
