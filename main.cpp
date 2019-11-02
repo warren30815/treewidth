@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <omp.h>
 
 #include "common.h"
 #include "Graph.h"
@@ -85,7 +86,7 @@ unsigned long lower(Graph graph, int graph_index){
     timestamp_t t0, t1;
     double time_sec;
     int meta = 0;
-    int lb = 1;
+    int lb = 0;
     // if(argc>3)
     //     lb = atoi(argv[3]);
     // if(argc>4)
@@ -181,11 +182,11 @@ unsigned long upper(Graph graph, int graph_index, int strategy_index, int partia
 
 int main(int argc, const char * argv[]) {
     string filename = argv[2];
-    int strategy_index = atoi(argv[3]);
-    int partial_degree = atoi(argv[4]);
     ifstream file(filename);  // ifstream: Stream class to read from files
     vector<Graph> graphs;
     timestamp_t start_time, end_time;
+    omp_set_num_threads(1000);
+
     start_time = get_timestamp();
 
     cout << "Preprocessing..." << endl;
@@ -211,18 +212,22 @@ int main(int argc, const char * argv[]) {
 
     string first_arg(argv[1]);
     if(first_arg=="--upper"){
+    	int strategy_index = atoi(argv[3]);
+    	int partial_degree = atoi(argv[4]);
+#pragma omp parallel for 
         for(int i = 0; i < SampleNum; i++){
             total_upper_bound += upper(graphs[i], i, strategy_index, partial_degree);
         }
         cout << "Average treewidth 'upper' bound: " << total_upper_bound / SampleNum << endl;
     } 
     else if(first_arg=="--lower"){
+#pragma omp parallel for 
         for(int i = 0; i < SampleNum; i++){
             total_lower_bound += lower(graphs[i], i);
         }
         cout << "Average treewidth 'lower' bound: " << total_lower_bound / SampleNum << endl;
     } 
     end_time = get_timestamp();
-    cout << " Total elapsed time: " << (end_time - start_time)/(1000.0L*1000.0L) << " sec."<< endl;
+    cout << "Total elapsed time: " << (end_time - start_time)/(1000.0L*1000.0L) << " sec."<< endl;
     return 0;
 }
