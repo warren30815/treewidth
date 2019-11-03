@@ -288,9 +288,9 @@ int main(int argc, const char * argv[]) {
     } 
 
     cout << "Average density: " << total_density / SampleNum << endl;
-    cout << "Max density graph: " << to_string(graph.number_nodes()) << " nodes, " << to_string(graph.number_edges()) << " edges" << endl;
+    cout << "Max density graph: " << to_string(max_density_graph.number_nodes()) << " nodes, " << to_string(max_density_graph.number_edges()) << " edges" << endl;
     cout << "Max density = " << max_density << endl;
-    cout << "Min density graph: " << total_density / SampleNum << endl;
+    cout << "Min density graph: " << to_string(min_density_graph.number_nodes()) << " nodes, " << to_string(min_density_graph.number_edges()) << " edges" << endl;
     cout << "Min density = " << min_density << endl;
 
     end_time = get_timestamp();
