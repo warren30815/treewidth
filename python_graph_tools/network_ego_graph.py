@@ -5,10 +5,10 @@ from random import *
 import os, sys
 
 # region 變數區
-FileName = "gplus_combined"
+FileName = "soc-pokec-relationships"
 Graphtype = netx.DiGraph()   # use net.DiGraph() for directed graph
 SampleNum = 100
-Hop = 3
+Hop = 1
 OutputFileDir = FileName + "_" + str(SampleNum) + "_Sample_Data" 
 OutputFileName = str(Hop) + "Hop.txt"
 OutputFilePath = OutputFileDir + "/" + OutputFileName
