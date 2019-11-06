@@ -5,6 +5,10 @@ This repository contains the source code for evaluation of lower and upper bound
 treewidth of undirected graphs. It implements a subset of the algorithms
 described in [this paper][1] and [this paper][2].
 
+# Notice
+Can't run on Mac OS!!!!
+Please use Ubuntu
+
 # Compiling
 
 The *Makefile* is in the main folder, so simply execute *make*:
