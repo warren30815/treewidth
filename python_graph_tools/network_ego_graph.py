@@ -5,15 +5,14 @@ from random import *
 import os, sys
 
 # region 變數區
-FileName = "soc-pokec-relationships"
-Graphtype = netx.DiGraph()   # use net.DiGraph() for directed graph
+FileName = "Enron"
+IsDirected = sys.argv[1]
 SampleNum = 100
-Hop = 1
+Hop = 3
 OutputFileDir = FileName + "_" + str(SampleNum) + "_Sample_Data" 
 OutputFileName = str(Hop) + "Hop.txt"
 OutputFilePath = OutputFileDir + "/" + OutputFileName
 Mode = "Dev"  # Dev or Test 
-IsDirected = sys.argv[1]
 # endregion
 
 def Test_ego_graph_function(hop=1):
@@ -53,9 +52,16 @@ def Output_Graph_textFile(G, outputPath, selected_node, node_degree):
 
 if __name__ == '__main__':
 
+    Graphtype = None
+    
+    if IsDirected == "t":
+        Graphtype = netx.DiGraph()
+    elif IsDirected == "f":
+        Graphtype = netx.Graph() 
+
     if Mode == "Dev":
         # How to read from a file. Note: if your egde weights are int, change float to int.
-        G = netx.read_edgelist(FileName + ".txt", create_using=Graphtype, nodetype=int)
+        G = netx.read_edgelist(FileName + ".txt", create_using=Graphtype)
 
         if not os.path.isdir(OutputFileDir):
             os.mkdir(OutputFileDir)

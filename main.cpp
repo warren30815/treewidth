@@ -117,6 +117,7 @@ void update_min_max_density(Graph G){
         cout << "f or t" << endl;
         exit(-1);
     }
+
     if (current_density > max_density){
         max_density = current_density;
         max_density_graph = G;
@@ -238,10 +239,26 @@ int main(int argc, const char * argv[]) {
         cout << "Input format is: " << argv[0] << " [--upper or --lower] [filename] [isDirected, t or f] [(only upper need) strategy_index] [(only upper need) partial_degree]" << endl; 
         return -1;
     }
+    else if(string(argv[1]) == "--upper")
+    {
+        if(argc < 5)
+        {
+            cout << "Input format is: " << argv[0] << " [--upper or --lower] [filename] [(only upper need) strategy_index] [(only upper need) partial_degree]" << endl; 
+            return -1;
+        }
+    }
+    else if(string(argv[1]) == "--lower")
+    {
+        if(argc < 3)
+        {
+            cout << "Input format is: " << argv[0] << " [--upper or --lower] [filename]" << endl; 
+            return -1;
+        }
+    }
 
     string first_arg(argv[1]);  // 此寫法結果和下面那行一樣
     string filename = argv[2];
-    isDirected = argv[3];  // f for undirected；t for directed
+    isDirected = "f";
     ifstream file(filename);  // ifstream: Stream class to read from files
     vector<Graph> graphs;
     timestamp_t start_time, end_time;
@@ -257,22 +274,29 @@ int main(int argc, const char * argv[]) {
             // 以'-'來分隔一組Graph data
             if (line[0] != '-'){
                 vector<string> node_pair = string_split(line, "\t");
-                unsigned long src = stoul(node_pair[0]);  // stoul : Convert string to unsigned integer
-                unsigned long target = stoul(node_pair[1]);  
-                if(src != target) graph.add_edge(src, target);
+                if (line != ""){
+                    unsigned long src = stoul(node_pair[0]);  // stoul : Convert string to unsigned integer
+                    unsigned long target = stoul(node_pair[1]);  
+                    if(src != target) graph.add_edge(src, target);
+                }
             }
             else{
-                graphs.push_back(graph);
-                graph.clear();
+                if (graph.number_nodes() > 0){
+                    graphs.push_back(graph);
+                    graph.clear();
+                }
             }
         }
         file.close();
     }
     cout << "Preprocessing Done" << endl;
 
+    cout << "Update Sample Num" << endl;
+    SampleNum = graphs.size();
+
     if(first_arg=="--upper"){
-    	int strategy_index = atoi(argv[4]);
-    	int partial_degree = atoi(argv[5]);
+    	int strategy_index = atoi(argv[3]);
+    	int partial_degree = atoi(argv[4]);
 #pragma omp parallel for 
         for(int i = 0; i < SampleNum; i++){
             total_upper_bound += upper(graphs[i], i, strategy_index, partial_degree);
@@ -295,5 +319,6 @@ int main(int argc, const char * argv[]) {
 
     end_time = get_timestamp();
     cout << "Total elapsed time: " << (end_time - start_time)/(1000.0L*1000.0L) << " sec."<< endl;
+    cout << "Filename: " << filename << endl;
     return 0;
 }
