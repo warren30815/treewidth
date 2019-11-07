@@ -5,12 +5,12 @@ from random import *
 import os, sys
 
 # region 變數區
-FileName = "Enron"
-IsDirected = sys.argv[1]
+FileName = "facebook_combined"
+IsUnDirected = sys.argv[1]
 SampleNum = 100
-Hop = 3
-OutputFileDir = FileName + "_" + str(SampleNum) + "_Sample_Data" 
-OutputFileName = str(Hop) + "Hop.txt"
+Hop = 2
+OutputFileDir = "data" 
+OutputFileName = FileName + "_" + str(Hop) + "Hop.txt"
 OutputFilePath = OutputFileDir + "/" + OutputFileName
 Mode = "Dev"  # Dev or Test 
 # endregion
@@ -30,7 +30,7 @@ def Test_ego_graph_function(hop=1):
     exit()
 
 def Build_Custom_hop_Ego_Network(G, hop, selected_node):
-    custom_ego = netx.ego_graph(G, selected_node, hop, undirected=IsDirected)
+    custom_ego = netx.ego_graph(G, selected_node, hop, undirected=True)
     return custom_ego
    
 def Calculate_largest_degree_node(G):
@@ -53,11 +53,13 @@ def Output_Graph_textFile(G, outputPath, selected_node, node_degree):
 if __name__ == '__main__':
 
     Graphtype = None
-    
-    if IsDirected == "t":
-        Graphtype = netx.DiGraph()
-    elif IsDirected == "f":
-        Graphtype = netx.Graph() 
+
+    if IsUnDirected == "True":
+        print("IsUnDirected")
+        Graphtype = netx.Graph()
+    elif IsUnDirected == "False":
+        print("IsDirected")
+        Graphtype = netx.DiGraph() 
 
     if Mode == "Dev":
         # How to read from a file. Note: if your egde weights are int, change float to int.
@@ -69,12 +71,16 @@ if __name__ == '__main__':
         # Find the total number of degree for each node
         # for x in G.nodes():
         #     print("Node: ", x, " has total #degree: ",G.degree(x))
-
-        for i in range(SampleNum):
-            selected_node = sample(G.nodes(), 1)[0]
-            print("Node: ", selected_node, " has total #degree: ",G.degree(selected_node))
-            custom_ego = Build_Custom_hop_Ego_Network(G, hop=Hop, selected_node=selected_node)
-            Output_Graph_textFile(custom_ego, OutputFilePath, selected_node, G.degree(selected_node))
+        count = 0
+        for i in range(len(G.nodes())):
+            if (count < SampleNum):
+                selected_node = sample(G.nodes(), 1)[0]
+                print("Node: ", selected_node, " has total #degree: ",G.degree(selected_node))
+                custom_ego = Build_Custom_hop_Ego_Network(G, hop=Hop, selected_node=selected_node)
+                Output_Graph_textFile(custom_ego, OutputFilePath, selected_node, G.degree(selected_node))
+                count += 1
+            else:
+                break
         # # full graph
         # Show_Full_Graph(G)
         # Draw_Graph(custom_ego, selected_node)
