@@ -268,8 +268,8 @@ int main(int argc, const char * argv[]) {
             // 以'-'來分隔一組Graph data
             if (line[0] != '-'){
                 vector<string> node_pair = string_split(line, "\t");
-                unsigned long src = stoul(node_pair[0]);  // stoul : Convert string to unsigned integer
-                unsigned long target = stoul(node_pair[1]);  
+                unsigned long src = stoul(node_pair[0]);  // stoul : Convert string to unsigned long
+                unsigned long target = stoul(node_pair[1]);  // stoull : Convert string to unsigned long long
                 if(src != target) graph.add_edge(src, target);
             }
             else{

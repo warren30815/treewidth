@@ -5,12 +5,12 @@ from random import *
 import os, sys
 
 # region 變數區
-FileName = "facebook_combined"
-IsUnDirected = sys.argv[1]
+FileName = "Enron"
+IsDirected = sys.argv[1]
 SampleNum = 100
 Hop = 2
 OutputFileDir = "data" 
-OutputFileName = FileName + "_" + str(Hop) + "Hop.txt"
+OutputFileName = "version2_" + FileName + "_" + str(Hop) + "Hop.txt"
 OutputFilePath = OutputFileDir + "/" + OutputFileName
 Mode = "Dev"  # Dev or Test 
 # endregion
@@ -30,7 +30,7 @@ def Test_ego_graph_function(hop=1):
     exit()
 
 def Build_Custom_hop_Ego_Network(G, hop, selected_node):
-    custom_ego = netx.ego_graph(G, selected_node, hop, undirected=True)
+    custom_ego = netx.ego_graph(G, selected_node, hop)
     return custom_ego
    
 def Calculate_largest_degree_node(G):
@@ -54,16 +54,25 @@ if __name__ == '__main__':
 
     Graphtype = None
 
-    if IsUnDirected == "True":
-        print("IsUnDirected")
-        Graphtype = netx.Graph()
-    elif IsUnDirected == "False":
-        print("IsDirected")
-        Graphtype = netx.DiGraph() 
+    if IsDirected == "True":
+        print("Input: Directed graph")
+        Graphtype = netx.DiGraph()
+    elif IsDirected == "False":
+        print("Input: Undirected graph")
+        Graphtype = netx.Graph() 
+    else:
+        print("Error input")
+        exit(-1)
 
     if Mode == "Dev":
         # How to read from a file. Note: if your egde weights are int, change float to int.
         G = netx.read_edgelist(FileName + ".txt", create_using=Graphtype)
+
+        print("Transfering directed to undirected ...")
+        if IsDirected == "True":
+            G = G.to_undirected(reciprocal=True)
+            netx.write_edgelist(G, "undirected_" + FileName + ".txt", delimiter="\t", data=False)
+        print("Done")
 
         if not os.path.isdir(OutputFileDir):
             os.mkdir(OutputFileDir)
@@ -72,15 +81,25 @@ if __name__ == '__main__':
         # for x in G.nodes():
         #     print("Node: ", x, " has total #degree: ",G.degree(x))
         count = 0
-        for i in range(len(G.nodes())):
+        for i in range(G.number_of_nodes()):
             if (count < SampleNum):
                 selected_node = sample(G.nodes(), 1)[0]
-                print("Node: ", selected_node, " has total #degree: ",G.degree(selected_node))
                 custom_ego = Build_Custom_hop_Ego_Network(G, hop=Hop, selected_node=selected_node)
-                Output_Graph_textFile(custom_ego, OutputFilePath, selected_node, G.degree(selected_node))
-                count += 1
+                if (custom_ego.number_of_nodes() > 1):
+                    print("Node: ", selected_node, " has total #degree: ",G.degree(selected_node))
+                    Output_Graph_textFile(custom_ego, OutputFilePath, selected_node, G.degree(selected_node))
+                    count += 1
+                    print("Process: " + str(count) + "/" + str(SampleNum))
+                else:
+                    print("pass")
+                    pass
             else:
                 break
+
+        if (count < SampleNum):
+            print("Not enough num!!!!!!!!!!!!!!!")
+        else:
+            print("Num check: OK!")
         # # full graph
         # Show_Full_Graph(G)
         # Draw_Graph(custom_ego, selected_node)
