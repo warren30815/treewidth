@@ -5,10 +5,10 @@ from random import *
 import os, sys
 
 # region 變數區
-FileName = "Enron"
+FileName = "undirected_soc-LiveJournal1"
 IsDirected = sys.argv[1]
 SampleNum = 100
-Hop = 2
+Hop = 3
 OutputFileDir = "data" 
 OutputFileName = "version2_" + FileName + "_" + str(Hop) + "Hop.txt"
 OutputFilePath = OutputFileDir + "/" + OutputFileName
@@ -68,11 +68,11 @@ if __name__ == '__main__':
         # How to read from a file. Note: if your egde weights are int, change float to int.
         G = netx.read_edgelist(FileName + ".txt", create_using=Graphtype)
 
-        print("Transfering directed to undirected ...")
         if IsDirected == "True":
+            print("Transfering directed to undirected ...")
             G = G.to_undirected(reciprocal=True)
             netx.write_edgelist(G, "undirected_" + FileName + ".txt", delimiter="\t", data=False)
-        print("Done")
+            print("Done")
 
         if not os.path.isdir(OutputFileDir):
             os.mkdir(OutputFileDir)
@@ -98,6 +98,7 @@ if __name__ == '__main__':
 
         if (count < SampleNum):
             print("Not enough num!!!!!!!!!!!!!!!")
+            exit(-1)
         else:
             print("Num check: OK!")
         # # full graph

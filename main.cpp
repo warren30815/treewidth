@@ -30,8 +30,11 @@
 
 using namespace std;
 
-// region 變數區
+// region constant 
 int SampleNum = 100;
+// endregion
+
+// region 變數區
 unsigned long total_upper_bound = 0;
 unsigned long total_lower_bound = 0;
 double total_time = 0;
@@ -43,6 +46,17 @@ double max_density = 0;
 Graph min_density_graph;
 Graph max_density_graph;
 // endregion
+
+void reset_all_parameter(){
+    total_upper_bound = 0;
+    total_lower_bound = 0;
+    total_time = 0;
+    total_density = 0;
+    total_nodes = 0;
+    total_edges = 0;
+    min_density = 1;
+    max_density = 0;
+}
 
 // 字串切割函數
 vector<string> string_split(const string &s, const string &seperator){
@@ -230,100 +244,116 @@ unsigned long upper(Graph graph, int graph_index, int strategy_index, int partia
 
 int main(int argc, const char * argv[]) {
 
-    if(argc < 2)
+    if(argc != 3)
     {
-        cout << "Input format is: " << argv[0] << " [--upper or --lower] [filename] [(only upper need) strategy_index] [(only upper need) partial_degree]" << endl; 
+        cout << "Input format is: " << argv[0] << " [(only upper need) strategy_index] [(only upper need) partial_degree]" << endl; 
         return -1;
     }
-    else if(string(argv[1]) == "--upper")
-    {
-        if(argc < 5)
-        {
-            cout << "Input format is: " << argv[0] << " [--upper or --lower] [filename] [(only upper need) strategy_index] [(only upper need) partial_degree]" << endl; 
-            return -1;
-        }
-    }
-    else if(string(argv[1]) == "--lower")
-    {
-        if(argc < 3)
-        {
-            cout << "Input format is: " << argv[0] << " [--upper or --lower] [filename]" << endl; 
-            return -1;
-        }
-    }
 
-    string first_arg(argv[1]);  // 此寫法結果和下面那行一樣
-    string filename = argv[2];
-    ifstream file(filename);  // ifstream: Stream class to read from files
-    vector<Graph> graphs;
-    timestamp_t start_time, end_time;
-    
-    omp_set_num_threads(1000);
+    fstream oFile;
+    oFile.open("result.csv", ios::out | ios::app);
+    oFile << "Data" << "," << "Hop" << "," << "Average upper treewidth" << "," << "Time" << "," << "Average lower treewidth" << "," <<\
+    "Time" << "," << "Average node nums" << "," << "Average edge nums" << "," << "Average density" << "," << "Max graph node nums" << "," <<\
+    "Max graph edge nums" << "," << "Max graph density" << "," << "Min graph node nums" << "," <<\
+    "Min graph edge nums" << "," << "Min graph density" << endl;
 
-    cout << "Preprocessing..." << endl;
-    if (file.is_open()) {
-        string line;
-        Graph graph;
-        while (getline(file, line)) {
-            // 以'-'來分隔一組Graph data
-            if (line[0] != '-'){
-                vector<string> node_pair = string_split(line, "\t");
-                unsigned long src = stoul(node_pair[0]);  // stoul : Convert string to unsigned long
-                unsigned long target = stoul(node_pair[1]);  // stoull : Convert string to unsigned long long
-                if(src != target) graph.add_edge(src, target);
-            }
-            else{
-                if (graph.number_nodes() > 0)
-                {
-                    graphs.push_back(graph);
-                    graph.clear();
+    vector<string> vect{"version2_Enron", "version2_facebook_combined", "version2_undirected_soc-Epinions1", "version2_undirected_soc-LiveJournal1", "version2_undirected_soc-pokec-relationships", "version2_undirected_twitter_combined"};
+
+    for (string filename : vect){
+        string datapath = "python_graph_tools/data/" + filename;
+        for (int i = 1; i < 4; i++){
+            string path = datapath + "_" + to_string(i) + "Hop.txt";
+            ifstream file(path);  // ifstream: Stream class to read from files
+            vector<Graph> graphs;
+            timestamp_t start_time, end_time;
+            
+            omp_set_num_threads(1000);
+
+            cout << "Filename: " << filename << "_Hop" << to_string(i) << endl;
+            oFile << filename << "," << to_string(i) << ",";
+
+            cout << "Preprocessing..." << endl;
+            if (file.is_open()) {
+                string line;
+                Graph graph;
+                while (getline(file, line)) {
+                    // 以'-'來分隔一組Graph data
+                    if (line[0] != '-'){
+                        vector<string> node_pair = string_split(line, "\t");
+                        unsigned long src = stoul(node_pair[0]);  // stoul : Convert string to unsigned long
+                        unsigned long target = stoul(node_pair[1]);  // stoull : Convert string to unsigned long long
+                        if(src != target) graph.add_edge(src, target);
+                    }
+                    else{
+                        if (graph.number_nodes() > 0)
+                        {
+                            graphs.push_back(graph);
+                            graph.clear();
+                        }
+                    }
                 }
+                file.close(); 
             }
+
+            cout << "Preprocessing Done" << endl;
+
+            cout << "Check Sample Num..." << endl;
+            if (SampleNum != (int)graphs.size())
+            {
+                cout << "Failed: " << (int)graphs.size() << "/100" << endl;
+                exit(-1);
+            }
+            else
+            {
+                cout << "OK" << endl;
+            }
+
+            // region upper
+            start_time = get_timestamp();
+
+            int strategy_index = atoi(argv[1]);
+            int partial_degree = atoi(argv[2]);
+            #pragma omp parallel for 
+            for(int i = 0; i < SampleNum; i++){
+                total_upper_bound += upper(graphs[i], i, strategy_index, partial_degree);
+            }
+            cout << "Average treewidth 'upper' bound: " << total_upper_bound / SampleNum << endl;
+            end_time = get_timestamp();
+            cout << "Total elapsed time (not including preprocessing time): " << (end_time - start_time)/(1000.0L*1000.0L) << " sec."<< endl;
+            oFile << total_upper_bound / SampleNum << "," << (end_time - start_time)/(1000.0L*1000.0L) << ",";
+
+            reset_all_parameter();
+            // endregion
+
+            // region lower
+            start_time = get_timestamp();
+
+            #pragma omp parallel for 
+            for(int i = 0; i < SampleNum; i++){
+                total_lower_bound += lower(graphs[i], i);
+            }
+            cout << "Average treewidth 'lower' bound: " << total_lower_bound / SampleNum << endl;
+            end_time = get_timestamp();
+            cout << "Total elapsed time (not including preprocessing time): " << (end_time - start_time)/(1000.0L*1000.0L) << " sec."<< endl;
+            oFile << total_lower_bound / SampleNum << "," << (end_time - start_time)/(1000.0L*1000.0L) << ",";
+
+            // endregion
+
+            cout << "Average node numbers: " << total_nodes / SampleNum << endl;
+            cout << "Average edge numbers: " << total_edges / SampleNum << endl;
+            cout << "Average density: " << total_density / SampleNum << endl;
+            cout << "Max density graph: " << to_string(max_density_graph.number_nodes()) << " nodes, " << to_string(max_density_graph.number_edges()) << " edges" << endl;
+            cout << "Max density = " << max_density << endl;
+            cout << "Min density graph: " << to_string(min_density_graph.number_nodes()) << " nodes, " << to_string(min_density_graph.number_edges()) << " edges" << endl;
+            cout << "Min density = " << min_density << endl;
+
+            oFile << total_nodes / SampleNum << "," << total_edges / SampleNum << "," << total_density / SampleNum << "," <<\
+            max_density_graph.number_nodes() << "," << max_density_graph.number_edges() << "," <<\
+            max_density << "," << min_density_graph.number_nodes() << "," << min_density_graph.number_edges() << "," <<\
+            min_density << endl;
+
+            graphs.clear();
         }
-        file.close();
     }
-    cout << "Preprocessing Done" << endl;
-
-    cout << "Check Sample Num..." << endl;
-    if (SampleNum != (int)graphs.size())
-    {
-        cout << "Failed: " << (int)graphs.size() << "/100" << endl;
-        exit(-1);
-    }
-    else
-    {
-        cout << "OK" << endl;
-    }
-
-    start_time = get_timestamp();
-
-    if(first_arg=="--upper"){
-    	int strategy_index = atoi(argv[3]);
-    	int partial_degree = atoi(argv[4]);
-#pragma omp parallel for 
-        for(int i = 0; i < SampleNum; i++){
-            total_upper_bound += upper(graphs[i], i, strategy_index, partial_degree);
-        }
-        cout << "Average treewidth 'upper' bound: " << total_upper_bound / SampleNum << endl;
-    } 
-    else if(first_arg=="--lower"){
-#pragma omp parallel for 
-        for(int i = 0; i < SampleNum; i++){
-            total_lower_bound += lower(graphs[i], i);
-        }
-        cout << "Average treewidth 'lower' bound: " << total_lower_bound / SampleNum << endl;
-    } 
-
-    cout << "Average node numbers: " << total_nodes / SampleNum << endl;
-    cout << "Average edge numbers: " << total_edges / SampleNum << endl;
-    cout << "Average density: " << total_density / SampleNum << endl;
-    cout << "Max density graph: " << to_string(max_density_graph.number_nodes()) << " nodes, " << to_string(max_density_graph.number_edges()) << " edges" << endl;
-    cout << "Max density = " << max_density << endl;
-    cout << "Min density graph: " << to_string(min_density_graph.number_nodes()) << " nodes, " << to_string(min_density_graph.number_edges()) << " edges" << endl;
-    cout << "Min density = " << min_density << endl;
-
-    end_time = get_timestamp();
-    cout << "Total elapsed time (not including preprocessing time): " << (end_time - start_time)/(1000.0L*1000.0L) << " sec."<< endl;
-    cout << "Filename: " << filename << endl;
     return 0;
 }
