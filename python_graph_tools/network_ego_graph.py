@@ -10,7 +10,7 @@ IsDirected = sys.argv[1]
 SampleNum = 100
 Hop = 3
 OutputFileDir = "data" 
-OutputFileName = "version2_" + FileName + "_" + str(Hop) + "Hop.txt"
+OutputFileName = FileName + "_" + str(Hop) + "Hop.txt"
 OutputFilePath = OutputFileDir + "/" + OutputFileName
 Mode = "Dev"  # Dev or Test 
 # endregion
