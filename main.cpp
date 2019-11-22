@@ -142,7 +142,7 @@ unsigned long lower(Graph graph, int graph_index){
     timestamp_t t0, t1;
     double time_sec;
     int meta = 0;
-    int lb = 0;
+    int lb = 1;
     // if(argc>3)
     //     lb = atoi(argv[3]);
     // if(argc>4)
@@ -251,13 +251,15 @@ int main(int argc, const char * argv[]) {
     }
 
     fstream oFile;
-    oFile.open("result.csv", ios::out | ios::app);
+    oFile.open("upper_partial_1000_lower_MMD+_result_upper.csv", ios::out | ios::app);
     oFile << "Data" << "," << "Hop" << "," << "Average upper treewidth" << "," << "Time" << "," << "Average lower treewidth" << "," <<\
     "Time" << "," << "Average node nums" << "," << "Average edge nums" << "," << "Average density" << "," << "Max graph node nums" << "," <<\
     "Max graph edge nums" << "," << "Max graph density" << "," << "Min graph node nums" << "," <<\
     "Min graph edge nums" << "," << "Min graph density" << endl;
 
-    vector<string> vect{"version2_Enron", "version2_facebook_combined", "version2_undirected_soc-Epinions1", "version2_undirected_soc-LiveJournal1", "version2_undirected_soc-pokec-relationships", "version2_undirected_twitter_combined"};
+    vector<string> vect{"version2_Enron", "version2_facebook_combined", "version2_undirected_soc-Epinions1", "version2_undirected_twitter_combined", "version2_undirected_soc-pokec-relationships", "version2_undirected_soc-LiveJournal1"};
+    // vector<string> vect{"version2_undirected_twitter_combined", "version2_undirected_soc-pokec-relationships"};
+    // vector<string> vect{"version2_undirected_soc-pokec-relationships", "version2_undirected_soc-LiveJournal1"};
 
     for (string filename : vect){
         string datapath = "python_graph_tools/data/" + filename;
